@@ -21,7 +21,9 @@
 
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>📋 Carnet de Commandes & Analyses Morphologiques</h2>
-                <a href="{{ route('orders.create') }}" class="btn btn-primary">📐 Nouvelle Fiche Mesures</a>
+                @if(Auth::user()->role === 'admin' || Auth::user()->role === 'styliste')
+                    <a href="{{ route('orders.create') }}" class="btn btn-primary">📐 Nouvelle Fiche Mesures</a>
+                @endif
             </div>
 
             @if($orders->isEmpty())
@@ -29,7 +31,9 @@
                     <div class="card-body">
                         <h4 class="text-muted">Aucune commande enregistrée pour le moment.</h4>
                         <p class="text-secondary">Lancez-vous en créant votre première fiche de mesures client !</p>
-                        <a href="{{ route('orders.create') }}" class="btn btn-outline-primary mt-2">Créer une fiche</a>
+                        @if(Auth::user()->role === 'admin' || Auth::user()->role === 'styliste')
+                            <a href="{{ route('orders.create') }}" class="btn btn-outline-primary mt-2">Créer une fiche</a>
+                        @endif
                     </div>
                 </div>
             @else
@@ -42,17 +46,26 @@
                                 <h4 class="mb-1 text-dark"><strong>{{ $order->client_name }}</strong></h4>
                                 <p class="text-muted small mb-2">📞 {{ $order->client_phone ?? 'Non renseigné' }}</p>
                                 
-                                <form action="{{ route('orders.updateStatus', $order->id) }}" method="POST" class="mt-2 mb-2">
-                                    @csrf
-                                    @method('PATCH')
-                                    <label class="form-label small text-muted mb-1">Statut Atelier :</label>
-                                    <select name="status" class="form-select form-select-sm shadow-sm" onchange="this.form.submit()">
-                                        <option value="En attente" {{ $order->status == 'En attente' ? 'selected' : '' }}>⏳ En attente</option>
-                                        <option value="En coupe" {{ $order->status == 'En coupe' ? 'selected' : '' }}>✂️ En coupe</option>
-                                        <option value="En couture" {{ $order->status == 'En couture' ? 'selected' : '' }}>🪡 En couture</option>
-                                        <option value="Prêt" {{ $order->status == 'Prêt' ? 'selected' : '' }}>👗 Prêt</option>
-                                    </select>
-                                </form>
+                                <div class="mt-2 mb-2">
+                                    <label class="form-label small text-muted mb-1 d-block">Statut Atelier :</label>
+                                    
+                                    @if(Auth::user()->role === 'admin' || Auth::user()->role === 'couturier')
+                                        <form action="{{ route('orders.updateStatus', $order->id) }}" method="POST">
+                                            @csrf
+                                            @method('PATCH')
+                                            <select name="status" class="form-select form-select-sm shadow-sm" onchange="this.form.submit()">
+                                                <option value="En attente" {{ $order->status == 'En attente' ? 'selected' : '' }}>⏳ En attente</option>
+                                                <option value="En coupe" {{ $order->status == 'En coupe' ? 'selected' : '' }}>✂️ En coupe</option>
+                                                <option value="En couture" {{ $order->status == 'En couture' ? 'selected' : '' }}>🪡 En couture</option>
+                                                <option value="Prêt" {{ $order->status == 'Prêt' ? 'selected' : '' }}>👗 Prêt</option>
+                                            </select>
+                                        </form>
+                                    @else
+                                        <span class="badge bg-dark px-3 py-2 text-capitalize fs-6 shadow-sm">
+                                            @if($order->status == 'En attente') ⏳ @elseif($order->status == 'En coupe') ✂️ @elseif($order->status == 'En couture') 🪡 @else 👗 @endif {{ $order->status }}
+                                        </span>
+                                    @endif
+                                </div>
 
                                 <small class="text-muted d-block mb-1">📅 Analyse du : <strong>{{ $order->created_at->format('d/m/Y à H:i') }}</strong></small>
                                 <small class="text-muted">Assigné à : <strong>{{ $order->user ? $order->user->name : 'Non assigné' }}</strong></small>
@@ -103,7 +116,6 @@
                                 <div class="display-4 fw-bold text-success mb-2">{{ $order->dominant_morphology }}</div>
                                 
                                 @php
-                                    // Extraction dynamique des conseils croisés depuis notre service de style
                                     $conseils = \App\Services\StyleAdvisorService::generateAdvisor($order);
                                 @endphp
 
