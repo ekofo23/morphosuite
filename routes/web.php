@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\EmployeeController;
-use App\Http\Controllers\HomeController; // 👈 Ajouté pour la route /home
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 
 /*
@@ -34,11 +34,18 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
 // 👗 Routes accessibles par tous les employés connectés (Admin, Styliste, Couturier)
 Route::middleware(['auth'])->group(function () {
+   
+    // 📊 Étape 9.1 : Nouvelle Route Analytique de l'Atelier (MorphoMetrics)
+    Route::get('/dashboard', [OrderController::class, 'dashboard'])->name('dashboard');
+
+    // Gestion du carnet de commandes
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-    // 🔄 Route pour mettre à jour le statut d'une confection (accessible par les couturiers/admins)
-    Route::patch('/orders/{id}/status',
- [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
- Route::get('/orders/{order}/pdf', [OrderController::class, 'downloadPDF'])->name('orders.pdf');
+    
+    // 🔄 Route pour mettre à jour le statut d'une confection
+    Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    
+    // 📄 Route d'exportation PDF du passeport et de la fiche technique
+    Route::get('/orders/{order}/pdf', [OrderController::class, 'downloadPDF'])->name('orders.pdf');
 });

@@ -51,4 +51,13 @@ public function role()
 {
     return $this->belongsTo(Role::class);
 }
+
+
+        /**
+     * Obtenir toutes les fiches de mesures/commandes assignées à cet artisan.
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }

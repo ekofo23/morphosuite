@@ -146,4 +146,43 @@ public function downloadPDF($id)
     // 6. Déclencher le téléchargement immédiat chez l'utilisateur
     return $pdf->download($filename);
 }
+
+
+
+
+
+            /**
+ * Génère les statistiques globales de l'atelier pour le tableau de bord.
+ */
+public function dashboard()
+{
+    // 1. Statistiques des volumes globaux
+    $totalOrders = Order::count();
+    
+    // 2. Répartition par Statut d'Atelier
+    $statusCounts = Order::select('status', \DB::raw('count(*) as total'))
+                        ->groupBy('status')
+                        ->pluck('total', 'status')
+                        ->toArray();
+
+    // S'assurer que chaque statut existe même avec un score de 0
+    $statuses = ['En attente' => 0, 'En coupe' => 0, 'En couture' => 0, 'Prêt' => 0];
+    foreach ($statuses as $key => $value) {
+        $statuses[$key] = $statusCounts[$key] ?? 0;
+    }
+
+    // 3. Répartition des Morphologies Dominantes (Top Tendances)
+    $morphologyCounts = Order::select('dominant_morphology', \DB::raw('count(*) as total'))
+                            ->groupBy('dominant_morphology')
+                            ->orderBy('total', 'desc')
+                            ->get();
+
+    // 4. Charge de travail des Artisans (Commandes non terminées assignées)
+    $artisanLoads = \App\Models\User::withCount(['orders' => function($query) {
+                        $query->where('status', '!=', 'Prêt');
+                    }])->get();
+
+    // 5. Envoyer toutes ces mesures à la future vue analytique
+    return view('dashboard', compact('totalOrders', 'statuses', 'morphologyCounts', 'artisanLoads'));
+}
 }
