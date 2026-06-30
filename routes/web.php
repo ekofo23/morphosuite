@@ -40,4 +40,5 @@ Route::middleware(['auth'])->group(function () {
     // 🔄 Route pour mettre à jour le statut d'une confection (accessible par les couturiers/admins)
     Route::patch('/orders/{id}/status',
  [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+ Route::get('/orders/{order}/pdf', [OrderController::class, 'downloadPDF'])->name('orders.pdf');
 });

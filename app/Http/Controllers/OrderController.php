@@ -6,6 +6,8 @@ use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
@@ -119,4 +121,29 @@ class OrderController extends Controller
 
         return redirect()->back()->with('success', 'Le statut de la confection a été mis à jour avec succès !');
     }
+
+
+                /**
+ * Génère et télécharge le passeport morphologique et la fiche atelier en PDF.
+ */
+public function downloadPDF($id)
+{
+    // 1. Récupérer la commande avec son utilisateur assigné
+    $order = Order::with('user')->findOrFail($id);
+
+    // 2. Générer les recommandations stylistiques et techniques à la volée
+    $conseils = \App\Services\StyleAdvisorService::generateAdvisor($order);
+
+    // 3. Charger la vue HTML spécifique au PDF en lui passant les variables
+    $pdf = Pdf::loadView('orders.pdf', compact('order', 'conseils'));
+
+    // 4. Configurer le format du papier (A4 vertical standard)
+    $pdf->setPaper('a4', 'portrait');
+
+    // 5. Nettoyer le nom du fichier pour le téléchargement (ex: fiche_glody_order_12.pdf)
+    $filename = 'fiche_' . Str::slug($order->client_name, '_') . '_order_' . $order->id . '.pdf';
+
+    // 6. Déclencher le téléchargement immédiat chez l'utilisateur
+    return $pdf->download($filename);
+}
 }

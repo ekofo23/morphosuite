@@ -110,6 +110,9 @@
                                 <button class="btn btn-sm btn-dark w-100 shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#style-{{ $order->id }}">
                                     ✨ Voir le Style
                                 </button>
+                                <a href="{{ route('orders.pdf', $order->id) }}" class="btn btn-sm btn-outline-danger w-100 shadow-sm mt-2">
+                                    📄 Exporter PDF
+                                </a>
                             </div>
 
                         </div>
