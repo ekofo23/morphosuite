@@ -22,7 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role_id', // 👈 On ajoute cette ligne pour lever la sécurité !
+        'role_id',
     ];
 
     /**
@@ -45,15 +45,37 @@ class User extends Authenticatable
     ];
 
     /**
- * Récupérer le rôle de l'employé
- */
-public function role()
-{
-    return $this->belongsTo(Role::class);
-}
+     * Récupérer le rôle de l'employé
+     */
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
 
+    /**
+     * Vérifier si l'utilisateur possède un rôle spécifique (ou plusieurs)
+     * Exemple : $user->hasRole('admin') ou $user->hasRole(['admin', 'styliste'])
+     */
+    public function hasRole($roles)
+    {
+        // Si l'utilisateur n'a pas de relation de rôle, on refuse d'office
+        if (!$this->role) {
+            return false;
+        }
 
-        /**
+        // On nettoie et récupère le nom du rôle en minuscules (ex: "admin")
+        $userRoleName = strtolower($this->role->name);
+
+        // Si on passe un tableau de rôles à vérifier
+        if (is_array($roles)) {
+            return in_array($userRoleName, array_map('strtolower', $roles));
+        }
+
+        // Si on passe une simple chaîne de caractères
+        return $userRoleName === strtolower($roles);
+    }
+
+    /**
      * Obtenir toutes les fiches de mesures/commandes assignées à cet artisan.
      */
     public function orders()

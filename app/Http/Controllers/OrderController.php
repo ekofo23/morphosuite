@@ -185,4 +185,13 @@ public function dashboard()
     // 5. Envoyer toutes ces mesures à la future vue analytique
     return view('dashboard', compact('totalOrders', 'statuses', 'morphologyCounts', 'artisanLoads'));
 }
+
+
+        // À vérifier dans app/Http/Controllers/OrderController.php
+public function show($id)
+{
+    $order = Order::with('user')->findOrFail($id);
+    $employees = \App\Models\User::all(); 
+    return view('orders.show', compact('order', 'employees'));
+}
 }

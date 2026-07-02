@@ -18,12 +18,12 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next)
     {
         // 1. On vérifie si l'utilisateur est bien connecté
-        // 2. On vérifie si son rôle est bien 'Admin'
-        if (Auth::check() && Auth::user()->role && Auth::user()->role->name === 'Admin') {
-            return $next($request); // ✅ Il est Admin, on le laisse passer !
+        // 2. On utilise notre nouvelle méthode pour valider qu'il est 'admin'
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return $next($request);
         }
 
-        // ❌ Il n'est pas Admin ! On le bloque et on le renvoie à l'accueil avec un message d'erreur
-        return redirect('/home')->with('error', 'Accès refusé ! Vous devez être Administrateur pour voir cette page.');
+        // Si l'utilisateur n'est pas admin, on bloque l'accès avec une erreur 403 (Interdit)
+        abort(403, 'Accès réservé uniquement aux administrateurs de l\'atelier.');
     }
 }
