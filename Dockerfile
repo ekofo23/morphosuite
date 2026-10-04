@@ -1,6 +1,6 @@
 FROM php:8.1-apache
 
-# 1. Installer les dépendances système et les drivers PostgreSQL
+# 1. Installer les dépendances système et les extensions PHP (MySQL + PostgreSQL + GD + ZIP)
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     libpq-dev \
-    && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
-    && docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd
+    libzip-dev \
+    && docker-php-ext-install pdo pdo_mysql mysqli pdo_pgsql pgsql mbstring exif pcntl bcmath gd zip
 
 # 2. Activer le module rewrite d'Apache
 RUN a2enmod rewrite
@@ -27,10 +27,16 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 # 5. Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 6. Exécuter composer install sans lancer les scripts auto-discover pendant le build de l'image
+# 6. Exécuter composer install avec --no-scripts pour éviter l'exécution de scripts artisan avant la fin du build
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # 7. Configurer les permissions storage et cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 EXPOSE 80
+CMD ["sh", "/var/www/html/entrypoint.sh"]
+# Rendre le script entrypoint exécutable
+RUN chmod +x /var/www/html/entrypoint.sh
+
+# Lancer entrypoint.sh au démarrage du conteneur
+CMD ["sh", "/var/www/html/entrypoint.sh"]
