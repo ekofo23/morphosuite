@@ -1,16 +1,17 @@
+
 #!/bin/bash
 
-# Lien symbolique pour les images/fichiers
+# Lien symbolique pour les images
 php artisan storage:link --force
 
-# Découverte et caches Laravel
+# Caches Laravel
 php artisan package:discover --ansi
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Migration de la base de données PostgreSQL
-php artisan migrate --force
+# Migration ET injection des données initiales (Seeders)
+php artisan migrate:fresh --seed --force
 
-# Démarrage d'Apache
+# Démarrage Apache
 exec apache2-foreground
