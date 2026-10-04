@@ -50,16 +50,16 @@ class StyleAdvisorService
 
         // 2️⃣ CROISEMENT INTELLIGENT AVEC LA LONGUEUR DU BUSTE
         if ($buste === 'court') {
-            $ajustementsAtelier[] = "⏳ Buste court détecté : Il est conseillé d'allonger visuellement le buste. Descendre légèrement la ligne de taille naturelle sur le patron ou privilégier des hauts à porter longs/par-dessus le bas.";
+            $ajustementsAtelier[] = " Buste court détecté : Il est conseillé d'allonger visuellement le buste. Descendre légèrement la ligne de taille naturelle sur le patron ou privilégier des hauts à porter longs/par-dessus le bas.";
         } elseif ($buste === 'long') {
-            $ajustementsAtelier[] = "⏳ Buste long détecté : Raccourcir visuellement le haut du corps. Remonter la ligne de taille sur le vêtement (tailles hautes impératives) pour allonger la ligne des jambes.";
+            $ajustementsAtelier[] = " Buste long détecté : Raccourcir visuellement le haut du corps. Remonter la ligne de taille sur le vêtement (tailles hautes impératives) pour allonger la ligne des jambes.";
         }
 
         // 3️⃣ CROISEMENT INTELLIGENT AVEC LA POSTURE
         if ($posture === 'cambrée') {
-            $ajustementsAtelier[] = "🧍 Posture Cambrée : Attention au tombé du tissu à l'arrière. Prévoir un ajustement de cambrure sur le patron dos (pince de dos plus profonde ou cambrure ajustée) pour éviter que le vêtement ne plisse ou ne remonte fâcheusement sur les fesses.";
+            $ajustementsAtelier[] = " Posture Cambrée : Attention au tombé du tissu à l'arrière. Prévoir un ajustement de cambrure sur le patron dos (pince de dos plus profonde ou cambrure ajustée) pour éviter que le vêtement ne plisse ou ne remonte fâcheusement sur les fesses.";
         } elseif ($posture === 'voûtée') {
-            $ajustementsAtelier[] = "🧍 Posture Voûtée : Allonger légèrement la longueur de la carrure dos sur le patron et basculer légèrement les coutures d'épaules vers l'avant pour accompagner le mouvement naturel du corps.";
+            $ajustementsAtelier[] = " Posture Voûtée : Allonger légèrement la longueur de la carrure dos sur le patron et basculer légèrement les coutures d'épaules vers l'avant pour accompagner le mouvement naturel du corps.";
         }
 
         return [

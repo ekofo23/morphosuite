@@ -2,7 +2,8 @@
 
 @section('content')
 <div class="container-fluid px-0" style="max-width: 1000px;">
-    <div class="d-flex justify-content-between align-items-center mb-5 pb-3 border-bottom">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
         <div>
             <h2 class="mb-1" style="font-family: 'Playfair Display', serif; font-weight: 700; color: var(--color-dark);">Tableau de Bord</h2>
             <p class="text-muted small mb-0">Pilotage en temps réel de la production et analyse des silhouettes.</p>
@@ -10,6 +11,22 @@
         <a href="{{ route('orders.index') }}" class="btn btn-secondary btn-sm d-flex align-items-center gap-2">
             <i class="bi bi-collection"></i> Voir le Carnet
         </a>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-5 p-2 rounded-3 custom-filter-bar shadow-sm">
+        <span class="text-muted small ps-2 fw-medium"><i class="bi bi-funnel me-1 text-primary"></i> Période :</span>
+        
+        <div class="btn-group p-1 rounded-3 custom-btn-group">
+            @php $currentPeriod = request('period', 'all'); @endphp
+            <!-- 🔍 AJOUT DU FILTRE D'UNE JOURNÉE ICI -->
+            <a href="?period=today" class="btn btn-sm px-3 rounded-2 fw-semibold {{ $currentPeriod == 'today' ? 'active-filter-btn' : 'text-muted border-0' }}">Journée</a>
+            
+            <a href="?period=all" class="btn btn-sm px-3 rounded-2 fw-semibold {{ $currentPeriod == 'all' ? 'active-filter-btn' : 'text-muted border-0' }}">Tous</a>
+            <a href="?period=week" class="btn btn-sm px-3 rounded-2 fw-semibold {{ $currentPeriod == 'week' ? 'active-filter-btn' : 'text-muted border-0' }}">Semaine</a>
+            <a href="?period=month" class="btn btn-sm px-3 rounded-2 fw-semibold {{ $currentPeriod == 'month' ? 'active-filter-btn' : 'text-muted border-0' }}">Mois</a>
+            <a href="?period=quarter" class="btn btn-sm px-3 rounded-2 fw-semibold {{ $currentPeriod == 'quarter' ? 'active-filter-btn' : 'text-muted border-0' }}">Trimestre</a>
+            <a href="?period=year" class="btn btn-sm px-3 rounded-2 fw-semibold {{ $currentPeriod == 'year' ? 'active-filter-btn' : 'text-muted border-0' }}">Annuel</a>
+        </div>
     </div>
 
     <div class="row g-4 mb-5">
@@ -21,7 +38,7 @@
                 </div>
                 <div class="mt-3">
                     <h2 class="display-6 fw-bold mb-0" style="font-family: 'Playfair Display', serif;">{{ $totalOrders }}</h2>
-                    <small class="opacity-75" style="font-size: 0.75rem;">Enregistrées au total</small>
+                    <small class="opacity-75" style="font-size: 0.75rem;">Sur la période choisie</small>
                 </div>
             </div>
         </div>
@@ -33,9 +50,9 @@
                     <i class="bi bi-clock text-warning"></i>
                 </div>
                 <div class="mt-3">
-                    <h2 class="fw-bold mb-2 dashboard-stat-number" style="font-size: 1.8rem;">{{ $statuses['En attente'] }}</h2>
+                    <h2 class="fw-bold mb-2 dashboard-stat-number" style="font-size: 1.8rem;">{{ $statuses['En attente'] ?? 0 }}</h2>
                     <div class="progress" style="height: 3px; background-color: #ECECEC;">
-                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $totalOrders > 0 ? ($statuses['En attente'] / $totalOrders) * 100 : 0 }}%"></div>
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $totalOrders > 0 ? (($statuses['En attente'] ?? 0) / $totalOrders) * 100 : 0 }}%"></div>
                     </div>
                 </div>
             </div>
@@ -48,9 +65,10 @@
                     <i class="bi bi-scissors text-primary"></i>
                 </div>
                 <div class="mt-3">
-                    <h2 class="fw-bold mb-2 dashboard-stat-number" style="font-size: 1.8rem;">{{ $statuses['En coupe'] + $statuses['En couture'] }}</h2>
+                    @php $inProgress = ($statuses['En coupe'] ?? 0) + ($statuses['En couture'] ?? 0); @endphp
+                    <h2 class="fw-bold mb-2 dashboard-stat-number" style="font-size: 1.8rem;">{{ $inProgress }}</h2>
                     <div class="progress" style="height: 3px; background-color: #ECECEC;">
-                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $totalOrders > 0 ? (($statuses['En coupe'] + $statuses['En couture']) / $totalOrders) * 100 : 0 }}%"></div>
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $totalOrders > 0 ? ($inProgress / $totalOrders) * 100 : 0 }}%"></div>
                     </div>
                 </div>
             </div>
@@ -63,9 +81,9 @@
                     <i class="bi bi-check-circle text-success"></i>
                 </div>
                 <div class="mt-3">
-                    <h2 class="fw-bold mb-2 dashboard-stat-number" style="font-size: 1.8rem;">{{ $statuses['Prêt'] }}</h2>
+                    <h2 class="fw-bold mb-2 dashboard-stat-number" style="font-size: 1.8rem;">{{ $statuses['Prêt'] ?? 0 }}</h2>
                     <div class="progress" style="height: 3px; background-color: #ECECEC;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ $totalOrders > 0 ? ($statuses['Prêt'] / $totalOrders) * 100 : 0 }}%"></div>
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ $totalOrders > 0 ? (($statuses['Prêt'] ?? 0) / $totalOrders) * 100 : 0 }}%"></div>
                     </div>
                 </div>
             </div>
@@ -120,14 +138,12 @@
                                 @foreach($artisanLoads as $artisan)
                                     <tr class="border-bottom-subtle" style="background-color: transparent !important;">
                                         <td class="ps-0 fw-semibold py-3 card-body-text style-td" style="background-color: transparent !important;">{{ $artisan->name }}</td>
-                                        
                                         <td class="text-center py-3 style-td" style="background-color: transparent !important;">
                                             <span class="badge px-2 py-1 text-capitalize role-badge" 
                                                   style="font-weight: 500; font-size: 0.75rem; background-color: rgba(255, 255, 255, 0.12) !important; color: #FFFFFF !important; border: 1px solid rgba(255, 255, 255, 0.15) !important;">
                                                 {{ is_object($artisan->role) ? ($artisan->role->name ?? 'Artisan') : $artisan->role }}
                                             </span>
                                         </td>
-                                        
                                         <td class="text-end pe-0 py-3 style-td" style="background-color: transparent !important;">
                                             @if($artisan->orders_count > 3)
                                                 <span class="fw-bold px-2 py-1 rounded load-badge-danger" 
@@ -153,28 +169,27 @@
 </div>
 
 <style>
-    /* Forcer la transparence de la table */
-    .custom-dashboard-table, 
-    .custom-dashboard-table th, 
-    .custom-dashboard-table td, 
-    .custom-dashboard-table tr,
-    .style-th,
-    .style-td {
+    /* Design de la Barre de Filtrage */
+    .custom-filter-bar { background-color: #F8FAFC; border: 1px solid #E2E8F0; }
+    .custom-btn-group { background-color: #F1F5F9; }
+    .active-filter-btn { background-color: #3B82F6 !important; color: #FFFFFF !important; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3); border: none; }
+    
+    /* Forcer la transparence des tables */
+    .custom-dashboard-table, .custom-dashboard-table th, .custom-dashboard-table td, 
+    .custom-dashboard-table tr, .style-th, .style-td {
         background-color: transparent !important;
-        background: transparent !important;
     }
 
     /* Thème Clair Global */
-    .dashboard-stat-number { color: #111111; }
-    .card-title-text { color: #212529; }
-    .card-body-text { color: #212529; }
+    .dashboard-stat-number, .card-title-text, .card-body-text { color: #111111; }
     .table-header-row th { color: #6c757d !important; border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important; }
     .border-bottom-subtle { border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important; }
     .border-bottom-subtle:last-child { border-bottom: none !important; }
 
-    /* Thème Sombre Global */
-    .dark-theme .dashboard-stat-number { color: #FFFFFF !important; }
-    .dark-theme .card-title-text { color: #FFFFFF !important; }
+    /* Variations dynamiques Thème Sombre */
+    .dark-theme .custom-filter-bar { background-color: #171C28 !important; border: 1px solid #242B3D !important; }
+    .dark-theme .custom-btn-group { background-color: #0B0F19 !important; }
+    .dark-theme .dashboard-stat-number, .dark-theme .card-title-text { color: #FFFFFF !important; }
     .dark-theme .card-body-text { color: #E5E7EB !important; }
     .dark-theme .table-header-row th { color: #9CA3AF !important; border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important; }
     .dark-theme .border-bottom-subtle { border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important; }
@@ -190,9 +205,7 @@
         if (rgb && rgb.length >= 3) {
             const r = parseInt(rgb[0]), g = parseInt(rgb[1]), b = parseInt(rgb[2]);
             const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-            if (luminance < 140) {
-                isDark = true;
-            }
+            if (luminance < 140) isDark = true;
         } else if (bodyBg === 'transparent' || bodyBg.includes('rgba(0, 0, 0, 0)')) {
             isDark = true;
         }

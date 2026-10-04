@@ -12,10 +12,10 @@
                 </div>
             @endif
 
-            <div class="d-flex justify-content-between align-items-center mb-5 pb-3 border-bottom">
+            <div class="d-flex justify-content-between align-items-center mb-5 pb-3 border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
                 <div>
-                    <h2 class="mb-1" style="font-family: 'Playfair Display', serif; font-weight: 700; color: var(--color-dark);">Gestion des Employés</h2>
-                    <p class="text-muted small mb-0">Pilotez les accès de l'équipe et assignez les rôles au sein de l'atelier.</p>
+                    <h2 class="mb-1" style="font-family: 'Playfair Display', serif; font-weight: 700; color: #D4AF37;">Gestion des Employés</h2>
+                    <p class="text-white-50 small mb-0">Pilotez les accès de l'équipe et assignez les rôles au sein de l'atelier.</p>
                 </div>
                 <span class="badge px-3 py-2 rounded-pill border fw-medium" style="background-color: rgba(255, 255, 255, 0.08) !important; color: #FFFFFF !important; font-size: 0.8rem; border-color: rgba(255,255,255,0.1) !important;">
                     {{ $employees->count() }} membres au total
@@ -30,7 +30,17 @@
                     background: transparent !important;
                     background-color: transparent !important;
                 }
-                /* Styles de base pour les badges d'habilitation adaptés en translucide */
+                /* Arrière-plan mis à jour avec le noir premium (#121316) */
+                .atelier-table tr {
+                    background-color: #121316 !important;
+                    background: #121316 !important;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.25) !important;
+                    transition: transform 0.15s ease-in-out;
+                }
+                .atelier-table tr:hover {
+                    transform: translateY(-2px);
+                }
+                /* Badges d'habilitation adaptés en translucide */
                 .role-badge {
                     padding: 0.4rem 0.8rem;
                     border-radius: 30px;
@@ -47,7 +57,7 @@
             <table class="atelier-table" style="background: transparent !important;">
                 <tbody style="background: transparent !important;">
                     @foreach($employees as $employee)
-                    <tr style="background-color: #2d2a2a !important; background: #2d2a2a !important; box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;">
+                    <tr>
                         
                         <td style="width: 25%; padding: 1.25rem 1rem; vertical-align: middle; border-top: 1px solid rgba(255, 255, 255, 0.05) !important; border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; border-left: 1px solid rgba(255, 255, 255, 0.05) !important; border-top-left-radius: 6px; border-bottom-left-radius: 6px; background: transparent !important;">
                             <div class="d-flex align-items-center gap-3">
@@ -61,12 +71,12 @@
                         </td>
 
                         <td style="width: 25%; padding: 1.25rem 1rem; vertical-align: middle; border-top: 1px solid rgba(255, 255, 255, 0.05) !important; border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; background: transparent !important;">
-                            <small class="text-muted d-block" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #9CA3AF !important;">Contact</small>
+                            <small class="text-white-50 d-block" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Contact</small>
                             <span class="small fw-medium" style="color: #E5E7EB !important;">{{ $employee->email }}</span>
                         </td>
 
                         <td style="width: 20%; padding: 1.25rem 1rem; vertical-align: middle; border-top: 1px solid rgba(255, 255, 255, 0.05) !important; border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; background: transparent !important;">
-                            <small class="text-muted d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #9CA3AF !important;">Habilitation</small>
+                            <small class="text-white-50 d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Habilitation</small>
                             @if($employee->role && $employee->role->name == 'Admin')
                                 <span class="role-badge role-admin">{{ $employee->role->name }}</span>
                             @elseif($employee->role && $employee->role->name == 'Styliste')
@@ -79,12 +89,12 @@
                         </td>
 
                         <td style="width: 20%; padding: 1.25rem 1rem; vertical-align: middle; border-top: 1px solid rgba(255, 255, 255, 0.05) !important; border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; background: transparent !important;">
-                            <small class="text-muted d-block" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #9CA3AF !important;">Inscription</small>
-                            <span class="small" style="color: #9CA3AF !important;">{{ $employee->created_at->format('d/m/Y à H:i') }}</span>
+                            <small class="text-white-50 d-block" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Inscription</small>
+                            <span class="small text-white-50">{{ $employee->created_at->format('d/m/Y à H:i') }}</span>
                         </td>
 
                         <td style="width: 10%; text-align: right; padding: 1.25rem 1rem; vertical-align: middle; border-top: 1px solid rgba(255, 255, 255, 0.05) !important; border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; border-right: 1px solid rgba(255, 255, 255, 0.05) !important; border-top-right-radius: 6px; border-bottom-right-radius: 6px; background: transparent !important;">
-                            <a href="{{ route('admin.employees.edit', $employee->id) }}" class="btn btn-sm btn-secondary py-1 px-3" style="font-size: 0.75rem; border-color: rgba(255,255,255,0.1) !important;">
+                            <a href="{{ route('admin.employees.edit', $employee->id) }}" class="btn btn-sm btn-outline-light py-1 px-3" style="font-size: 0.75rem; border-color: rgba(255,255,255,0.2) !important;">
                                 <i class="bi bi-pencil-square me-1"></i> Modifier
                             </a>
                         </td>

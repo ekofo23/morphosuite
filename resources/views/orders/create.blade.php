@@ -17,8 +17,10 @@
 
             <div class="d-flex justify-content-between align-items-center mb-5 pb-3 border-bottom">
                 <div>
-                    <h2 class="mb-1" style="font-family: 'Playfair Display', serif; font-weight: 700; color: var(--color-dark);">Nouvelle Fiche Mesures</h2>
-                    <p class="text-muted small mb-0">Enregistrement des mensurations anatomiques et lancement de l'analyse morphologique.</p>
+                    <!-- Écritures du haut passées en Or -->
+                    <h2 class="mb-1" style="font-family: 'Playfair Display', serif; font-weight: 700; color: #D4AF37;">Nouvelle Fiche Mesures</h2>
+                    <!-- Phrase sous le titre passée en blanc (text-white) -->
+                    <p class="text-white small mb-0">Enregistrement des mensurations anatomiques et lancement de l'analyse morphologique.</p>
                 </div>
                 <a href="{{ route('orders.index') }}" class="btn btn-secondary btn-sm d-flex align-items-center gap-2">
                     <i class="bi bi-arrow-left"></i> Retour au carnet
@@ -58,11 +60,11 @@
                         letter-spacing: 0.5px;
                         margin-bottom: 0.4rem;
                     }
+                    /* Partie "cm" modifiée en sombre léger avec texte blanc */
                     .measurement-addon {
-                        background-color: var(--color-bg-light);
-                        border: 1px solid var(--color-lin);
-                        border-left: none;
-                        color: #777777;
+                        background-color: #1D1E22 !important;
+                        border: 1px solid #1D1E22 !important;
+                        color: #FFFFFF !important;
                         font-size: 0.85rem;
                     }
                 </style>
@@ -168,7 +170,8 @@
                 </div>
 
                 <div class="d-flex justify-content-end mb-5">
-                    <button type="submit" class="btn btn-primary btn-lg px-5" style="font-size: 0.95rem; letter-spacing: 0.3px;">
+                    <!-- Bouton d'enregistrement Or avec texte sombre -->
+                    <button type="submit" class="btn btn-lg px-5 fw-bold" style="font-size: 0.95rem; letter-spacing: 0.3px; background-color: #D4AF37; color: #121316; border: none; border-radius: 4px;">
                         Enregistrer et lancer l'analyse MorphoCore
                     </button>
                 </div>

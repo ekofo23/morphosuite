@@ -13,13 +13,29 @@
         </div>
     @endif
 
-    <div class="d-flex justify-content-between align-items-center mb-5 pb-3">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3">
         <div>
             <h2 class="mb-1" style="font-family: 'Playfair Display', serif; font-weight: 700; color: #b09652 !important; font-size: 2.2rem;">Table de Contrôle Administrateur</h2>
             <p style="color: #ffffff !important; font-size: 0.9rem; margin-bottom: 0;">Bienvenue dans l'espace de gestion globale de MorphoSuite.</p>
         </div>
     </div>
 
+    <div class="d-flex justify-content-between align-items-center mb-5 p-2 rounded-3" style="background-color: #262322; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+        <span class="small ps-2 fw-semibold" style="color: rgba(255, 255, 255, 0.6);"><i class="bi bi-funnel me-1" style="color: #b09652;"></i> Filtrer la période :</span>
+        
+        <div class="btn-group p-1 rounded-3" style="background-color: #1A1818;">
+            @php $currentPeriod = request('period', 'all'); @endphp
+            
+            
+            
+            <a href="?period=all" class="btn btn-sm px-3 rounded-2 fw-semibold admin-filter-btn {{ $currentPeriod == 'all' ? 'admin-active' : '' }}">Tous</a>
+            <a href="?period=today" class="btn btn-sm px-3 rounded-2 fw-semibold admin-filter-btn {{ $currentPeriod == 'today' ? 'admin-active' : '' }}">Ajourd'hui</a>
+            <a href="?period=week" class="btn btn-sm px-3 rounded-2 fw-semibold admin-filter-btn {{ $currentPeriod == 'week' ? 'admin-active' : '' }}">Semaine</a>
+            <a href="?period=month" class="btn btn-sm px-3 rounded-2 fw-semibold admin-filter-btn {{ $currentPeriod == 'month' ? 'admin-active' : '' }}">Mois</a>
+            <a href="?period=quarter" class="btn btn-sm px-3 rounded-2 fw-semibold admin-filter-btn {{ $currentPeriod == 'quarter' ? 'admin-active' : '' }}">Trimestre</a>
+            <a href="?period=year" class="btn btn-sm px-3 rounded-2 fw-semibold admin-filter-btn {{ $currentPeriod == 'year' ? 'admin-active' : '' }}">Annuel</a>
+        </div>
+    </div>
     <div class="row g-4 mb-5">
         <div class="col-md-4">
             <div class="card border-0 p-4 h-100" style="background-color: #262322 !important; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
@@ -91,4 +107,24 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Styles spécifiques pour les boutons de filtrage de la zone admin */
+    .admin-filter-btn {
+        color: rgba(255, 255, 255, 0.4) !important;
+        border: none !important;
+        transition: all 0.2s ease-in-out;
+    }
+    .admin-filter-btn:hover {
+        color: #ffffff !important;
+    }
+    .admin-active {
+        background-color: #b09652 !important;
+        color: #1A1818 !important;
+        box-shadow: 0 2px 8px rgba(176, 150, 82, 0.4);
+    }
+    .admin-active:hover {
+        color: #1A1818 !important;
+    }
+</style>
 @endsection

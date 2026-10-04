@@ -8,7 +8,7 @@
             <div class="d-flex justify-content-between align-items-center mb-5 pb-3 border-bottom" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
                 <div>
                     <h2 class="mb-1" style="font-family: 'Playfair Display', serif; font-weight: 700; color: #FFFFFF !important;">Fiche Client & Analyse</h2>
-                    <p class="text-muted small mb-0" style="color: #9CA3AF !important;">Détails des mesures anatomiques et directives de coupe personnalisées.</p>
+                    <p class="text-muted small mb-0" style="color: #9CA3AF !important;">Détails des mesures anatomiques et directives de coupe personnalisées du moteur Morphosuite.</p>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{{ route('orders.index') }}" class="btn btn-secondary btn-sm d-flex align-items-center gap-2" style="border-color: rgba(255,255,255,0.1) !important;">
@@ -26,7 +26,7 @@
                     <div class="card border-0 shadow-sm p-4 mb-4" style="background-color: #2d2a2a !important; background: #2d2a2a !important; box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;">
                         <div class="text-center mb-3">
                             <div class="rounded-circle d-flex align-items-center justify-content-center fw-semibold mx-auto mb-3" style="width: 60px; height: 60px; background-color: rgba(255,255,255,0.06) !important; color: #FFFFFF !important; font-size: 1.2rem; border: 1px solid rgba(255,255,255,0.1);">
-                                {{ strtoupper(substr($order->client_name, 0, 1)) }}
+                                {{ $order->client_name ? strtoupper(substr($order->client_name, 0, 1)) : 'C' }}
                             </div>
                             <h4 class="fw-semibold mb-1" style="font-size: 1.1rem; color: #FFFFFF !important;">{{ $order->client_name }}</h4>
                             <p class="small mb-0" style="color: #9CA3AF !important;">{{ $order->client_phone ?? 'Aucun numéro enregistré' }}</p>
@@ -118,15 +118,34 @@
                         <div class="row align-items-center">
                             <div class="col-12">
                                 @if($order->morphology_percentages)
+                                    @php
+                                        // Extraction dynamique du pourcentage le plus faible pour la règle du rouge
+                                        $minPercentage = min($order->morphology_percentages);
+                                        $minMorpho = array_search($minPercentage, $order->morphology_percentages);
+                                        
+                                        // Génération dynamique de l'explication explicative
+                                        $explication = "";
+                                        if ($order->dominant_morphology) {
+                                            $dominantValue = $order->morphology_percentages[$order->dominant_morphology] ?? 0;
+                                            if ($dominantValue > 60) {
+                                                $explication = "La silhouette en " . $order->dominant_morphology . " se détache de manière très marquée (" . $dominantValue . "%). Les alignements structurels de la poitrine, de la taille et du bassin convergent presque exclusivement vers ce type. Lors du traçage du patron à l'atelier, les aisances de coupe devront impérativement prioriser la géométrie de cette morphologie dominante.";
+                                            } else {
+                                                $explication = "La silhouette en " . $order->dominant_morphology . " est identifiée comme dominante avec " . $dominantValue . "%, mais elle présente des caractéristiques partagées ou nuancées par les autres profils intermédiaires. La coupe devra structurer le vêtement sur la base principale tout en adoucissant les lignes pour équilibrer les volumes secondaires.";
+                                            }
+                                        } else {
+                                            $explication = "L'analyse automatique du moteur Morphosuite n'indique aucune silhouette majeure. Les proportions mesurées restent très équilibrées sur l'ensemble des profils.";
+                                        }
+                                    @endphp
+
+                                    {{-- Affichage des barres avec application stricte des règles de couleurs --}}
                                     @foreach($order->morphology_percentages as $morpho => $percentage)
                                         @php
-                                            // Utilisation de codes HEXA fixes pour garantir l'affichage des couleurs
                                             if ($morpho == $order->dominant_morphology) {
-                                                $gaugeColor = '#10B981'; // Vert Émeraude pour la silhouette dominante (Garanti !)
-                                            } elseif ($percentage >= 21) {
-                                                $gaugeColor = '#F59E0B'; // Orange moyen
+                                                $gaugeColor = '#10B981'; // Vert Émeraude pour la silhouette dominante
+                                            } elseif ($morpho == $minMorpho) {
+                                                $gaugeColor = '#EF4444'; // Rouge pour le pourcentage le plus faible
                                             } else {
-                                                $gaugeColor = '#EF4444'; // Rouge faible
+                                                $gaugeColor = '#F59E0B'; // Orange pour les silhouettes intermédiaires
                                             }
                                         @endphp
                                         <div class="mb-3">
@@ -145,6 +164,17 @@
                                             </div>
                                         </div>
                                     @endforeach
+
+                                    {{-- Bloc Explication Dynamique ajouté sous les barres --}}
+                                    <div class="card border-0 p-3 mt-4" style="background-color: rgba(255, 255, 255, 0.04); border-left: 4px solid #10B981 !important;">
+                                        <h6 class="text-white fw-bold mb-2" style="font-size: 0.85rem;">
+                                            <i class="bi bi-info-circle-fill text-warning me-2"></i> 
+                                            Analyse Morphosuite : Pourquoi cette morphologie est-elle dominante ?
+                                        </h6>
+                                        <p class="text-muted small mb-0" style="line-height: 1.5; color: #E5E7EB !important; font-size: 0.8rem;">
+                                            {{ $explication }}
+                                        </p>
+                                    </div>
                                 @endif
                             </div>
                         </div>

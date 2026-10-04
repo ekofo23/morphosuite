@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
+<link rel="icon" type="image/x-icon" href="{{ asset('favicon.png') }}">
     <title>MorphoSuite</title>
 
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
@@ -36,7 +36,7 @@
             min-height: 100vh;
         }
 
-        /* INJECTION DE LA COULEUR DYNAMIQUE SUR LES BLOCS ET CARTES */
+        /* INJECTION DE LA COULEUR DYNAMIQUE ON LES BLOCS ET CARTES */
         .card, 
         .tab-content, 
         .bg-white,
@@ -250,12 +250,12 @@
 <body>
 
     @if(isset($appSettings['app_background_type']) && $appSettings['app_background_type'] !== 'none' && isset($appSettings['app_background_file']))
-        <div class="app-background-container" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; overflow: hidden; pointer-events: none; background-color: rgba(0, 0, 0, 0.05); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);">
+        <div class="app-background-container" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; overflow: hidden; pointer-events: none;">
             
             @if($appSettings['app_background_type'] === 'image')
-                <img src="{{ asset('storage/' . ltrim($appSettings['app_background_file'], '/')) }}" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.40;">
+                <img src="{{ asset('storage/' . ltrim($appSettings['app_background_file'], '/')) }}" style="width: 100%; height: 100%; object-fit: cover; opacity: 1.0; position: relative; z-index: 0;">
             @elseif($appSettings['app_background_type'] === 'video')
-                <video autoplay muted loop playsinline src="{{ asset('storage/' . ltrim($appSettings['app_background_file'], '/')) }}" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.55;">
+                <video autoplay muted loop playsinline src="{{ asset('storage/' . ltrim($appSettings['app_background_file'], '/')) }}" style="width: 100%; height: 100%; object-fit: cover; opacity: 1.0; position: relative; z-index: 0;">
                 </video>
             @endif
 
@@ -302,30 +302,31 @@
                     @endif
 
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-layers"></i>
-                            <span>Modèles</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-calendar3"></i>
-                            <span>Calendrier</span>
+                        <a class="nav-link {{ request()->routeIs('mannequins.*') ? 'active' : '' }}" href="{{ route('mannequins.index') }}">
+                            <i class="bi bi-person-bounding-box me-2"></i>
+                            <span>Modèles 3D </span>
                         </a>
                     </li>
                     
-                    <li class="nav-item">
-                        <a class="nav-link {{ Request::is('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-                            <i class="bi bi-bar-chart-line"></i>
-                            <span>Rapports</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                       <a href="{{ route('admin.settings.index') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
-                            <i class="bi bi-gear"></i>
-                            <span>Paramètres</span>
-                        </a>
-                    </li>
+                    <!-- Affichage conditionnel : Uniquement pour le Couturier -->
+                    @if(Auth::user()->role && Auth::user()->role->name === 'Couturier')
+                        <li class="nav-item">
+                            <a class="nav-link {{ Request::is('rapport') ? 'active' : '' }}" href="{{ route('couturier.rapport') }}">
+                                <i class="bi bi-journal-check"></i>
+                                <span>Mes Confections</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    <!-- Affichage conditionnel des paramètres : Masqué pour le Couturier -->
+                    @if(!(Auth::user()->role && Auth::user()->role->name === 'Couturier'))
+                        <li class="nav-item">
+                           <a href="{{ route('admin.settings.index') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+                                <i class="bi bi-gear"></i>
+                                <span>Paramètres</span>
+                            </a>
+                        </li>
+                    @endif
                 @endauth
 
                 @guest

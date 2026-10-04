@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\User;
+use App\Models\Mannequin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -20,18 +21,84 @@ class OrderController extends Controller
     }
 
     /**
-     * Afficher la liste des commandes / fiches de mesures
+     * Afficher la liste des commandes / fiches de mesures (Carnet de Commandes)
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Si c'est l'admin, il voit tout. Si c'est un employé, il ne voit que ses commandes assignées.
+        // 1. Initialisation de la requête selon le rôle
         if (Auth::user()->role->name === 'Admin') {
-            $orders = Order::with('user')->latest()->get();
+            $query = Order::with('user');
         } else {
-            $orders = Order::where('user_id', Auth::id())->latest()->get();
+            $query = Order::where('user_id', Auth::id());
         }
 
+        // 🔍 BARRE DE RECHERCHE : Par nom de client
+        if ($request->filled('search')) {
+            $query->where('client_name', 'like', '%' . $request->search . '%');
+        }
+
+        // 📅 FILTRES TEMPORELS (Basés sur le paramètre 'period')
+        if ($request->filled('period')) {
+            switch ($request->period) {
+                case 'today':
+                    $query->whereDate('created_at', now()->toDateString());
+                    break;
+                case 'week':
+                    $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                    break;
+                case 'month':
+                    $query->whereMonth('created_at', now()->month)
+                          ->whereYear('created_at', now()->year);
+                    break;
+                case 'quarter':
+                    $query->whereBetween('created_at', [now()->startOfQuarter(), now()->endOfQuarter()]);
+                    break;
+                case 'year':
+                    $query->whereYear('created_at', now()->year);
+                    break;
+            }
+        }
+
+        // 2. On applique le tri et récupère les données
+        $orders = $query->latest()->get();
+
         return view('orders.index', compact('orders'));
+    }
+
+    /**
+     * Page "Mon Atelier de Confection" (Affiche SEULEMENT les commandes au statut 'Prêt')
+     */
+    public function confections(Request $request)
+    {
+        // 🎯 Restriction stricte : Seules les commandes au statut 'Prêt' assignées au couturier connecté
+        $query = Order::where('user_id', Auth::id())
+                      ->where('status', 'Prêt');
+
+        // 📅 Application des mêmes filtres temporels sur l'atelier
+        if ($request->filled('period')) {
+            switch ($request->period) {
+                case 'today':
+                    $query->whereDate('created_at', now()->toDateString());
+                    break;
+                case 'week':
+                    $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                    break;
+                case 'month':
+                    $query->whereMonth('created_at', now()->month)
+                          ->whereYear('created_at', now()->year);
+                    break;
+                case 'quarter':
+                    $query->whereBetween('created_at', [now()->startOfQuarter(), now()->endOfQuarter()]);
+                    break;
+                case 'year':
+                    $query->whereYear('created_at', now()->year);
+                    break;
+            }
+        }
+
+        $my_orders = $query->latest()->get();
+
+        return view('couturier.rapport', compact('my_orders'));
     }
 
     /**
@@ -39,13 +106,12 @@ class OrderController extends Controller
      */
     public function create()
     {
-        // On récupère la liste des couturiers/stylistes pour pouvoir leur assigner la commande (utile pour l'admin)
         $employees = User::all();
         return view('orders.create', compact('employees'));
     }
 
     /**
-     * Enregistrer la commande et déclencher MorphoCore (Avec historique & anti-doublon)
+     * Enregistrer la commande et déclencher MorphoCore
      */
     public function store(Request $request)
     {
@@ -62,8 +128,7 @@ class OrderController extends Controller
             'total_length' => 'nullable|integer',
         ]);
 
-        // 🔍 MÉCANISME ANTI-DOUBLON INTELLIGENT
-        // Vérification si une analyse strictement identique existe déjà pour cette cliente
+        // MÉCANISME ANTI-DOUBLON
         $existingOrder = Order::where('client_name', $request->client_name)
             ->where('shoulder_measurement', $request->shoulder_measurement)
             ->where('chest_measurement', $request->chest_measurement)
@@ -74,15 +139,13 @@ class OrderController extends Controller
             ->first();
 
         if ($existingOrder) {
-            // Si doublon parfait trouvé, on bloque l'écriture et on renvoie le message d'erreur
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['client_name' => 'Ces mesures sont déjà enregistrées pour cette cliente dans notre historique.']);
         }
 
-        // 🚀 Si au moins un élément diffère, on crée une nouvelle ligne d'historique (horodatée via created_at)
-        // L'événement static::saving dans Order.php interceptera ceci pour calculer MorphoCore
-        Order::create([
+        // Création de la commande
+        $order = Order::create([
             'client_name' => $request->client_name,
             'client_phone' => $request->client_phone,
             'shoulder_measurement' => $request->shoulder_measurement,
@@ -93,14 +156,25 @@ class OrderController extends Controller
             'posture_type' => $request->posture_type,
             'arm_length' => $request->arm_length,
             'total_length' => $request->total_length,
-            'user_id' => $request->user_id ?? Auth::id(), // Assigné à l'employé choisi ou à soi-même
+            'user_id' => $request->user_id ?? Auth::id(),
         ]);
 
-        return redirect()->route('orders.index')->with('success', 'Fiche client et analyse MorphoCore enregistrées avec succès !');
+        // Liaison Mannequin 3D
+        Mannequin::create([
+            'order_id'             => $order->id,
+            'profile_name'         => 'Mannequin de ' . $order->client_name,
+            'shoulder_measurement' => $order->shoulder_measurement,
+            'chest_measurement'    => $order->chest_measurement,
+            'waist_measurement'    => $order->waist_measurement,
+            'hip_measurement'      => $order->hip_measurement,
+            'dominant_morphology'  => $order->dominant_morphology ?? 'H',
+        ]);
+
+        return redirect()->route('orders.index')->with('success', 'Fiche client, analyse MorphoCore et modèle 3D enregistrés avec succès !');
     }
 
     /**
-     * 🪡 Mettre à jour le statut de fabrication d'une confection (Nouveauté Jour 7)
+     * Mettre à jour le statut de fabrication d'une confection
      */
     public function updateStatus(Request $request, $id)
     {
@@ -110,7 +184,6 @@ class OrderController extends Controller
 
         $order = Order::findOrFail($id);
         
-        // Sécurité : Un couturier ne peut modifier que les confections qui lui sont personnellement assignées
         if (Auth::user()->role->name === 'Couturier' && $order->user_id !== Auth::id()) {
             return redirect()->back()->with('error', 'Vous n\'êtes pas autorisé à modifier cette confection.');
         }
@@ -122,76 +195,97 @@ class OrderController extends Controller
         return redirect()->back()->with('success', 'Le statut de la confection a été mis à jour avec succès !');
     }
 
+    /**
+     * Génère et télécharge le PDF
+     */
+    public function downloadPDF($id)
+    {
+        $order = Order::with('user')->findOrFail($id);
+        $conseils = \App\Services\StyleAdvisorService::generateAdvisor($order);
 
-                /**
- * Génère et télécharge le passeport morphologique et la fiche atelier en PDF.
- */
-public function downloadPDF($id)
-{
-    // 1. Récupérer la commande avec son utilisateur assigné
-    $order = Order::with('user')->findOrFail($id);
+        $pdf = Pdf::loadView('orders.pdf', compact('order', 'conseils'));
+        $pdf->setPaper('a4', 'portrait');
 
-    // 2. Générer les recommandations stylistiques et techniques à la volée
-    $conseils = \App\Services\StyleAdvisorService::generateAdvisor($order);
-
-    // 3. Charger la vue HTML spécifique au PDF en lui passant les variables
-    $pdf = Pdf::loadView('orders.pdf', compact('order', 'conseils'));
-
-    // 4. Configurer le format du papier (A4 vertical standard)
-    $pdf->setPaper('a4', 'portrait');
-
-    // 5. Nettoyer le nom du fichier pour le téléchargement (ex: fiche_glody_order_12.pdf)
-    $filename = 'fiche_' . Str::slug($order->client_name, '_') . '_order_' . $order->id . '.pdf';
-
-    // 6. Déclencher le téléchargement immédiat chez l'utilisateur
-    return $pdf->download($filename);
-}
-
-
-
-
-
-            /**
- * Génère les statistiques globales de l'atelier pour le tableau de bord.
- */
-public function dashboard()
-{
-    // 1. Statistiques des volumes globaux
-    $totalOrders = Order::count();
-    
-    // 2. Répartition par Statut d'Atelier
-    $statusCounts = Order::select('status', \DB::raw('count(*) as total'))
-                        ->groupBy('status')
-                        ->pluck('total', 'status')
-                        ->toArray();
-
-    // S'assurer que chaque statut existe même avec un score de 0
-    $statuses = ['En attente' => 0, 'En coupe' => 0, 'En couture' => 0, 'Prêt' => 0];
-    foreach ($statuses as $key => $value) {
-        $statuses[$key] = $statusCounts[$key] ?? 0;
+        $filename = 'fiche_' . Str::slug($order->client_name, '_') . '_order_' . $order->id . '.pdf';
+        return $pdf->download($filename);
     }
 
-    // 3. Répartition des Morphologies Dominantes (Top Tendances)
-    $morphologyCounts = Order::select('dominant_morphology', \DB::raw('count(*) as total'))
-                            ->groupBy('dominant_morphology')
-                            ->orderBy('total', 'desc')
-                            ->get();
+    /**
+     * Génère les statistiques globales avec filtres et selon le rôle connecté
+     */
+    public function dashboard(Request $request)
+    {
+        // 1. Initialisation des requêtes selon le rôle (Admin voit tout, Couturier voit ses données uniquement)
+        if (Auth::user()->role->name === 'Admin') {
+            $orderQuery = Order::query();
+            $statusQuery = Order::select('status', \DB::raw('count(*) as total'))->groupBy('status');
+            $morphologyQuery = Order::select('dominant_morphology', \DB::raw('count(*) as total'))->groupBy('dominant_morphology');
+        } else {
+            $orderQuery = Order::where('user_id', Auth::id());
+            $statusQuery = Order::where('user_id', Auth::id())->select('status', \DB::raw('count(*) as total'))->groupBy('status');
+            $morphologyQuery = Order::where('user_id', Auth::id())->select('dominant_morphology', \DB::raw('count(*) as total'))->groupBy('dominant_morphology');
+        }
 
-    // 4. Charge de travail des Artisans (Commandes non terminées assignées)
-    $artisanLoads = \App\Models\User::withCount(['orders' => function($query) {
-                        $query->where('status', '!=', 'Prêt');
-                    }])->get();
+        // 📅 APPLICATION DU FILTRE TEMPOREL SUR TOUTES LES STATISTIQUES (Boutons Journée, Semaine...)
+        if ($request->filled('period')) {
+            switch ($request->period) {
+                case 'today':
+                    $orderQuery->whereDate('created_at', now()->toDateString());
+                    $statusQuery->whereDate('created_at', now()->toDateString());
+                    $morphologyQuery->whereDate('created_at', now()->toDateString());
+                    break;
+                case 'week':
+                    $range = [now()->startOfWeek(), now()->endOfWeek()];
+                    $orderQuery->whereBetween('created_at', $range);
+                    $statusQuery->whereBetween('created_at', $range);
+                    $morphologyQuery->whereBetween('created_at', $range);
+                    break;
+                case 'month':
+                    $orderQuery->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
+                    $statusQuery->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
+                    $morphologyQuery->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
+                    break;
+                case 'quarter':
+                    $range = [now()->startOfQuarter(), now()->endOfQuarter()];
+                    $orderQuery->whereBetween('created_at', $range);
+                    $statusQuery->whereBetween('created_at', $range);
+                    $morphologyQuery->whereBetween('created_at', $range);
+                    break;
+                case 'year':
+                    $orderQuery->whereYear('created_at', now()->year);
+                    $statusQuery->whereYear('created_at', now()->year);
+                    $morphologyQuery->whereYear('created_at', now()->year);
+                    break;
+            }
+        }
 
-    // 5. Envoyer toutes ces mesures à la future vue analytique
-    return view('dashboard', compact('totalOrders', 'statuses', 'morphologyCounts', 'artisanLoads'));
-}
+        // 2. Récupération des totaux calculés et filtrés
+        $totalOrders = $orderQuery->count();
+        
+        $statusCounts = $statusQuery->pluck('total', 'status')->toArray();
 
+        $statuses = ['En attente' => 0, 'En coupe' => 0, 'En couture' => 0, 'Prêt' => 0];
+        foreach ($statuses as $key => $value) {
+            $statuses[$key] = $statusCounts[$key] ?? 0;
+        }
 
-        // À vérifier dans app/Http/Controllers/OrderController.php
-public function show($id)
-{
-    $order = Order::with('user')->findOrFail($id);
-    $employees = \App\Models\User::all(); 
-    return view('orders.show', compact('order', 'employees'));
-}
+        $morphologyCounts = $morphologyQuery->orderBy('total', 'desc')->get();
+
+        // Charge de l'atelier (les commandes qui ne sont pas encore prêtes)
+        $artisanLoads = \App\Models\User::withCount(['orders' => function($query) {
+                            $query->where('status', '!=', 'Prêt');
+                        }])->get();
+
+        return view('dashboard', compact('totalOrders', 'statuses', 'morphologyCounts', 'artisanLoads'));
+    }
+
+    /**
+     * Afficher le détail d'une fiche client
+     */
+    public function show($id)
+    {
+        $order = Order::with('user')->findOrFail($id);
+        $employees = \App\Models\User::all(); 
+        return view('orders.show', compact('order', 'employees'));
+    }
 }

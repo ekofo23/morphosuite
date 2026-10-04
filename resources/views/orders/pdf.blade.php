@@ -82,6 +82,31 @@
             border-radius: 4px;
             margin-top: 15px;
         }
+        /* Styles pour les barres MorphoCore */
+        .progress-container {
+            margin-bottom: 12px;
+        }
+        .progress-labels {
+            font-size: 11px;
+            margin-bottom: 3px;
+        }
+        .progress-bar-bg {
+            height: 6px;
+            background-color: #E5E7EB;
+            border-radius: 3px;
+            width: 100%;
+        }
+        .progress-bar-fill {
+            height: 6px;
+            border-radius: 3px;
+        }
+        .analysis-box {
+            background-color: #F0FDF4;
+            border-left: 4px solid #10B981;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -91,7 +116,7 @@
         <table style="width: 100%;">
             <tr>
                 <td>
-                    <div class="brand">MORPHOSUITE</div>
+                    <div class="brand">Thierry-lam</div>
                     <div class="title">Fiche de Coupe & Directives Atelier</div>
                 </td>
                 <td style="text-align: right; vertical-align: bottom; color: #666666; font-size: 11px;">
@@ -146,6 +171,67 @@
             <td style="width: 50%;"><strong>Type de Posture :</strong> <span style="text-transform: capitalize;">{{ $order->posture_type }}</span></td>
         </tr>
     </table>
+
+    <!-- ANALYSE MORPHOCORE -->
+    <div class="section-title">Analyse MorphoCore</div>
+    <div style="margin-bottom: 30px;">
+        @if($order->morphology_percentages)
+            @php
+                $minPercentage = min($order->morphology_percentages);
+                $minMorpho = array_search($minPercentage, $order->morphology_percentages);
+                
+                $explication = "";
+                if ($order->dominant_morphology) {
+                    $dominantValue = $order->morphology_percentages[$order->dominant_morphology] ?? 0;
+                    if ($dominantValue > 60) {
+                        $explication = "La silhouette en " . $order->dominant_morphology . " se détache de manière très marquée (" . $dominantValue . "%). Les alignements structurels de la poitrine, de la taille et du bassin convergent presque exclusivement vers ce type. Lors du traçage du patron à l'atelier, les aisances de coupe devront impérativement prioriser la géométrie de cette morphologie dominante.";
+                    } else {
+                        $explication = "La silhouette en " . $order->dominant_morphology . " est identifiée comme dominante avec " . $dominantValue . "%, mais elle présente des caractéristiques partagées ou nuancées par les autres profils intermédiaires. La coupe devra structurer le vêtement sur la base principale tout en adoucissant les lignes pour équilibrer les volumes secondaires.";
+                    }
+                } else {
+                    $explication = "L'analyse automatique du moteur Morphosuite n'indique aucune silhouette majeure. Les proportions mesurées restent très équilibrées sur l'ensemble des profils.";
+                }
+            @endphp
+
+            @foreach($order->morphology_percentages as $morpho => $percentage)
+                @php
+                    if ($morpho == $order->dominant_morphology) {
+                        $gaugeColor = '#10B981'; 
+                        $isDominant = true;
+                    } elseif ($morpho == $minMorpho) {
+                        $gaugeColor = '#EF4444'; 
+                        $isDominant = false;
+                    } else {
+                        $gaugeColor = '#F59E0B'; 
+                        $isDominant = false;
+                    }
+                @endphp
+                <div class="progress-container">
+                    <table style="width: 100%;" class="progress-labels">
+                        <tr>
+                            <td style="font-weight: {{ $isDominant ? 'bold' : 'normal' }}; color: {{ $isDominant ? '#111111' : '#444444' }};">
+                                Silhouette {{ $morpho }} {{ $isDominant ? '(Dominante)' : '' }}
+                            </td>
+                            <td style="text-align: right; font-weight: {{ $isDominant ? 'bold' : 'normal' }}; color: {{ $isDominant ? '#111111' : '#444444' }};">
+                                {{ $percentage }}%
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: {{ $percentage }}%; background-color: {{ $gaugeColor }};"></div>
+                    </div>
+                </div>
+            @endforeach
+
+            <!-- Bloc Explication Dynamique -->
+            <div class="analysis-box">
+                <strong style="display: block; margin-bottom: 4px; font-size: 11px; color: #065F46;">Analyse Morphosuite : Pourquoi cette morphologie est-elle dominante ?</strong>
+                <p style="margin: 0; font-size: 11px; color: #065F46; line-height: 1.4;">
+                    {{ $explication }}
+                </p>
+            </div>
+        @endif
+    </div>
 
     <!-- DIRECTIVES ATELIER -->
     @php

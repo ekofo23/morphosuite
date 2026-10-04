@@ -40,7 +40,7 @@ class RedirectIfAuthenticated
                             return redirect()->route('styliste.index'); // Ton espace styliste
                         
                         case 'Couturier':
-                            return redirect()->route('couturier.index'); // Ton espace couturier
+                            return redirect()->route('couturier.rapport'); // Ton espace couturier
                     }
                 }
 

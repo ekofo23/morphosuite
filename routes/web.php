@@ -58,3 +58,9 @@ Route::post('/settings', [App\Http\Controllers\Admin\ConfigurationController::cl
 // Route pour la création directe d'un employé depuis cet espace
 Route::post('/settings/employees', [App\Http\Controllers\Admin\ConfigurationController::class, 'storeEmployee'])->name('admin.settings.storeEmployee');
 });
+Route::get('/mannequins', [App\Http\Controllers\MannequinController::class, 'index'])->name('mannequins.index');
+// Route pour les tableaux de bord
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+// Nouvelle route dédiée pour le rapport de la couturière
+Route::get('/rapport', [App\Http\Controllers\HomeController::class, 'rapport'])->name('couturier.rapport');

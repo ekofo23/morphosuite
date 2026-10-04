@@ -146,7 +146,7 @@
             <div class="overlay"></div>
 
             <div class="content">
-                <div class="brand-logo">TLAM</div>
+                <div class="brand-logo">Fashion-house</div>
                 <h1 class="welcome-title">Bienvenue sur MorphoSuite</h1>
                 <p class="welcome-subtitle">
                     Votre outil de gestion d'atelier sur-mesure. Planifiez vos commandes, gérez vos modèles et suivez les mesures de vos clients en toute simplicité.
