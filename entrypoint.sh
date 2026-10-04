@@ -1,12 +1,16 @@
 #!/bin/bash
 
-# Activer le cache Laravel
+# Lien symbolique pour les images/fichiers
+php artisan storage:link --force
+
+# Découverte et caches Laravel
 php artisan package:discover --ansi
 php artisan config:cache
 php artisan route:cache
+php artisan view:cache
 
-# Exécuter automatiquement les migrations sur la base PostgreSQL de Render
+# Migration de la base de données PostgreSQL
 php artisan migrate --force
 
-# Démarrer le serveur Web Apache
+# Démarrage d'Apache
 exec apache2-foreground
